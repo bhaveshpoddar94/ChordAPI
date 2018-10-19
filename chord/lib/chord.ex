@@ -23,10 +23,14 @@ defmodule Chord do
     end
   end
 
-  @bytes "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
   defp generate_keys(length) do
-    Enum.map(1..length, fn _x -> :binary.at(@bytes, :rand.uniform(byte_size(@bytes) - 1)) end)
-    Enum.map(fn x -> List.to_string(x) end)
+    Enum.map(1..length, fn _x -> gen_util(8))
+  end
+
+  @bytes "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  defp gen_util(n) do
+    Enum.map(1..n, fn _x -> :binary.at(@bytes, :rand.uniform(byte_size(@bytes) - 1)) end) 
+    |> List.to_string
   end
 
   defp hash(data, m) do
