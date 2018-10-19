@@ -2,6 +2,17 @@ defmodule Chord do
   def init(numNodes, numRequests) do
     # spawn nodes
     nodes = Enum.map(1..numNodes, fn node -> Node.start_link(node) end)
+
+    # choose m for chord ring
+    m = choose_m(8, numNodes)
+  end
+
+  # loop for choosing m
+  defp choose_m(m, numNodes, step \\ 8) do
+    cond do
+      numNodes < :math.pow(2, m) -> m
+      true -> choose_m(m+step, numNodes)
+    end
   end
 end
 
