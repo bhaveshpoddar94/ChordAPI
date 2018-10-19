@@ -8,6 +8,11 @@ defmodule Chord do
 
     # hash pids
     pid_list = hash(nodes, m)
+
+    # hash keys
+    keys  = generate_keys(numNodes * 5)
+    IO.inspect keys
+    key_list = hash(keys, m)
   end
 
   # loop for choosing m
@@ -16,6 +21,12 @@ defmodule Chord do
       numNodes < :math.pow(2, m) -> m
       true -> choose_m(m+step, numNodes)
     end
+  end
+
+  @bytes "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  defp generate_keys(length) do
+    Enum.map(1..length, fn _x -> :binary.at(@bytes, :rand.uniform(byte_size(@bytes) - 1)) end)
+    Enum.map(fn x -> List.to_string(x) end)
   end
 
   defp hash(data, m) do
