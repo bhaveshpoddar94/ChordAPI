@@ -9,22 +9,13 @@ defmodule Chord do
     # hash pids
     pid_list = hash(nodes, m) |> Enum.sort
 
-    # hash keys
-    keys  = generate_keys(numNodes * @multiplicity)
-    key_list = hash(keys, m) |> Enum.sort
-
     # create fingertables
     finger_tables = create_fingertables(pid_list, m)
-    Enum.map(finger_tables, fn {pid, table} -> Node.set_table(pid, table) end)
+    Enum.each(finger_tables, fn {pid, table} -> Node.set_state(pid, :table, table) end)
 
-    def loop(0), do: :ok
-    def loop(N) do
-      receive do
-        {:CHECK, pid, value} ->
-          IO.inspect numNodes
-          loop(numNodes-1)
-      end
-    end
+    # assign parent's pid to each node
+    Enum.each(pid_list, fn {_id, pid} -> Node.set_state(pid, :parent, self()) end)
+
   end
 
   # loop for choosing m
@@ -86,8 +77,12 @@ defmodule Node do
     GenServer.call(pid, :get_table)
   end
 
-  def find_successor(pid, key, acc) do
-    GenServer.call(pid, {:find_successor, key})
+  def get_parent(pid) do
+    GenServer.call(pid, :get_parent)
+  end
+
+  def find_successor(pid, key, hops\\0) do
+    GenServer.cast(pid, {:find_successor, key})
   end
 
   # Server
@@ -104,12 +99,17 @@ defmodule Node do
     {:reply, state[:table], state}
   end
 
+  def handle_call(:get_parent, _from, state) do
+    {:reply, state[:parent], state}
+  end
+
   def handle_cast({:find_successor, key, acc}, state) do
     {sid, spid} = Enum.at(state[:table], 0)
     if sid > key do
      send(state[:parent], {:DONE, acc})
     else
-      closest_preceding_node(state[:table], length(state[:table])-1, key)
+      npid = closest_preceding_node(state[:table], length(state[:table])-1, key)
+      find_successor(npid, )
     end
     {:noreply, state}
   end
