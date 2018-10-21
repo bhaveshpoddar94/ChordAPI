@@ -86,6 +86,10 @@ defmodule Node do
     GenServer.call(pid, :get_table)
   end
 
+  def find_successor(pid, key, acc) do
+    GenServer.call(pid, {:find_successor, key})
+  end
+
   # Server
   def init(state) do
     {:ok, state}
@@ -100,6 +104,24 @@ defmodule Node do
     {:reply, state[:table], state}
   end
 
+  def handle_cast({:find_successor, key, acc}, state) do
+    {sid, spid} = Enum.at(state[:table], 0)
+    if sid > key do
+     send(state[:parent], {:DONE, acc})
+    else
+      closest_preceding_node(state[:table], length(state[:table])-1, key)
+    end
+    {:noreply, state}
+  end
+
+  defp closest_preceding_node(table, -1, _key), do: Enum.max(table)
+  defp closest_preceding_node(table, i, key) do
+    {eid, epid} = Enum.at(table, i)
+    cond do
+      eid < key -> {eid, epid}
+      true -> closest_preceding_node(table, i-1, key)
+    end
+  end
 end
 
 [numNodes, numRequests] = System.argv() |> Enum.map(fn arg -> String.to_integer(arg) end)
