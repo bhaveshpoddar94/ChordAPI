@@ -15,18 +15,18 @@ defmodule Util do
 
   def create_fingertables(nodes, m) do
     ring_size = :math.pow(2, m) |> trunc
-    Enum.map(nodes, fn {id, pid} -> {pid, loop_m(id, nodes, m, ring_size)} end)
+    tasks = Enum.map(nodes, fn {id, pid} -> Task.async(fn -> loop_m(id, pid, nodes, m, ring_size) end) end)
+    Enum.map(tasks, &Task.await/1)
   end
 
-  def loop_m(curr_id, nodes, m, ring_size) do
-    Enum.map(1..m, fn k ->
-      (curr_id + :math.pow(2, k-1)) |> trunc |> Integer.mod(ring_size)
+  def loop_m(id, pid, nodes, m, ring_size) do
+    table = Enum.map(1..m, fn k ->
+      (id + :math.pow(2, k-1)) |> trunc |> Integer.mod(ring_size)
       |> loop_nodes(nodes, 0) end)
+    {pid, table}
   end
 
-  def loop_nodes(lim, nodes, index) when index >= length(nodes) do
-    Enum.at(nodes, 0)
-  end
+  def loop_nodes(lim, nodes, index) when index >= length(nodes), do: Enum.at(nodes, 0)
   def loop_nodes(lim, nodes, index) do
     {id, pid} = Enum.at(nodes, index)
     cond do
@@ -38,12 +38,8 @@ defmodule Util do
   def loop_request(_pid, 0, _m), do: :ok
   def loop_request(pid, numRequests, m) do
     key = (:math.pow(2, m) - 1) |> trunc |> :rand.uniform
-    lookup(pid, key)
-    loop_request(pid, numRequests-1, m)
-  end
-
-  def lookup(pid, key) do
     Chord.Node.find_successor(pid, key)
+    loop_request(pid, numRequests-1, m)
   end
 
   def listen(0, count, acc), do: acc

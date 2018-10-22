@@ -42,7 +42,6 @@ defmodule Chord.Node do
   end
 
   def handle_cast({:find_successor, key, hops}, state) do
-    # IO.puts "#{inspect(self())} finding key #{key}"
     {sid, _spid} = Enum.at(state[:table], 0)
     cond do
       state[:id] < key && key <= sid ->
@@ -51,17 +50,14 @@ defmodule Chord.Node do
         send(state[:parent], {:DONE, key, hops})
       true ->
         {nid, npid} = closest_preceding_node(state[:table], length(state[:table])-1, key, state[:id])
-        # IO.puts "Next node is #{nid}"
         find_successor(npid, key, hops+1)
     end
     {:noreply, state}
   end
 
-  defp closest_preceding_node(table, -1, _key, _curr_id), do: Enum.max(table)
   defp closest_preceding_node(table, i, key, curr_id) do
-    {eid, epid} = Enum.at(table, i) 
-    # IO.puts "FINDING key #{key}, inspecting entry #{eid}, current id #{curr_id}"
-    cond do 
+    {eid, epid} = Enum.at(table, i)
+    cond do
       # normal case
       curr_id < key ->
         cond do

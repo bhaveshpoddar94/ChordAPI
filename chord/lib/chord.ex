@@ -28,10 +28,9 @@ defmodule Chord do
     Enum.each(nodes, fn pid -> Util.loop_request(pid, numRequests, m) end)
 
     # listen for total number of hops
-    # Util.lookup(Enum.random(nodes), 250)
     total_requests = numNodes * numRequests |> trunc
-    total_hops = Util.listen(total_requests, 0, 0)
-    average_hops = total_hops/total_requests
+    total_hops     = Util.listen(total_requests, 0, 0)
+    average_hops   = total_hops/total_requests
     IO.puts "Average hops #{average_hops}"
   end
 end
