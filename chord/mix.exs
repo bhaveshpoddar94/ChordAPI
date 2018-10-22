@@ -7,6 +7,7 @@ defmodule Chord.MixProject do
       version: "0.1.0",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
+      escript: escript(),
       deps: deps()
     ]
   end
@@ -16,6 +17,10 @@ defmodule Chord.MixProject do
     [
       extra_applications: [:logger]
     ]
+  end
+
+  def escript do
+    [main_module: Chord]
   end
 
   # Run "mix help deps" to learn about dependencies.
