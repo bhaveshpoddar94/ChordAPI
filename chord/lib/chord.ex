@@ -9,7 +9,7 @@ defmodule Chord do
     nodes = Enum.map(1..numNodes, fn node -> Chord.Node.start_link(%{}) end)
 
     # choose m for chord ring
-    m = Util.choose_m(16, numNodes)
+    m = Util.choose_m(8, numNodes)
 
     # hash pids
     pid_list = Util.hash(nodes, m) |> Enum.sort

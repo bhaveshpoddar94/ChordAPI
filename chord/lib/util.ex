@@ -15,24 +15,16 @@ defmodule Util do
 
   def create_fingertables(nodes, m) do
     ring_size = :math.pow(2, m) |> trunc
-    tasks = Enum.map(nodes, fn {id, pid} -> Task.async(fn -> loop_m(id, pid, nodes, m, ring_size) end) end)
-    Enum.map(tasks, &Task.await/1)
+    tasks = Enum.map(nodes, fn {id, pid} -> loop_m(id, pid, nodes, m, ring_size) end)
   end
 
   def loop_m(id, pid, nodes, m, ring_size) do
     table = Enum.map(1..m, fn k ->
-      (id + :math.pow(2, k-1)) |> trunc |> Integer.mod(ring_size)
-      |> loop_nodes(nodes, 0) end)
+        key = (id + :math.pow(2, k-1)) |> trunc |> Integer.mod(ring_size)
+        a = Enum.find(nodes, fn {id, pid} -> id >= key end)
+        if a == nil do Enum.at(nodes, 0) else a end
+      end)
     {pid, table}
-  end
-
-  def loop_nodes(lim, nodes, index) when index >= length(nodes), do: Enum.at(nodes, 0)
-  def loop_nodes(lim, nodes, index) do
-    {id, pid} = Enum.at(nodes, index)
-    cond do
-      id >= lim -> {id, pid}
-      true -> loop_nodes(lim, nodes, index+1)
-    end
   end
 
   def loop_request(_pid, 0, _m), do: :ok
